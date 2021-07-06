@@ -1,7 +1,7 @@
 #include "graph.h"
 
 // -+-+-+-+-+-+-+-+-+-+- FRAME -+-+-+-+-+-+-+-+-+-+-
-FRAME::FRAME(short frameWidth, short frameHeight, HWND frameHwnd)
+FRAME::FRAME(int frameWidth, int frameHeight, HWND frameHwnd)
 {
     width = frameWidth;
     height = frameHeight;
@@ -32,9 +32,9 @@ void FRAME::clear(RGB color)
 {
     int i;
 
-    for (short y = 0; y < height; y++)
+    for (int y = 0; y < height; y++)
     {
-        for (short x = 0; x < width; x++)
+        for (int x = 0; x < width; x++)
         {
             i = y * width + x;
             buffer[i].R = color.R;
@@ -43,7 +43,7 @@ void FRAME::clear(RGB color)
         }
     }
 }
-void FRAME::set_pixel(short x, short y)
+void FRAME::set_pixel(int x, int y)
 {
     if (x > -1 && y > -1 && x < width && y < height)
     {
@@ -54,28 +54,28 @@ void FRAME::set_pixel(short x, short y)
         buffer[i].B = pen_color.B;
     }
 }
-void FRAME::set_circle(short x0, short y0, short R)
+void FRAME::set_circle(int x0, int y0, int R)
 {
-    for (short x = x0 - R; x < x0 + R; x++)
+    for (int x = x0 - R; x < x0 + R; x++)
     {
-        for (short y = y0 - R; y < y0 + R; y++)
+        for (int y = y0 - R; y < y0 + R; y++)
         {
             if (((x - x0) * (x - x0) + (y - y0) * (y - y0) - R * R) < 0) set_pixel(x, y);
         }
     }
 }
-void FRAME::set_line(short x1, short y1, short x2, short y2)
+void FRAME::set_line(int x1, int y1, int x2, int y2)
 {
-    short dx = ABS(x2 - x1);
-    short dy = ABS(y2 - y1);
-    short sx = (x2 >= x1) ? 1 : -1;
-    short sy = (y2 >= y1) ? 1 : -1;
+    int dx = ABS(x2 - x1);
+    int dy = ABS(y2 - y1);
+    int sx = (x2 >= x1) ? 1 : -1;
+    int sy = (y2 >= y1) ? 1 : -1;
 
     if (dx > dy)
     {
-        short d = (dy << 1) - dx, d1 = dy << 1, d2 = (dy - dx) << 1;
+        int d = (dy << 1) - dx, d1 = dy << 1, d2 = (dy - dx) << 1;
 
-        for (short x = x1 + sx, y = y1, i = 1; i < dx; i++, x += sx)
+        for (int x = x1 + sx, y = y1, i = 1; i < dx; i++, x += sx)
         {
             if (d > 0)
             {
@@ -85,13 +85,15 @@ void FRAME::set_line(short x1, short y1, short x2, short y2)
             else d += d1;
 
             set_pixel(x, y);
+            set_pixel(x, y+1);
+            set_pixel(x, y-1);
         }
     }
     else
     {
-        short d = (dx << 1) - dy, d1 = dx << 1, d2 = (dx - dy) << 1;
+        int d = (dx << 1) - dy, d1 = dx << 1, d2 = (dx - dy) << 1;
 
-        for (short x = x1, y = y1 + sy, i = 1; i < dy; i++, y += sy)
+        for (int x = x1, y = y1 + sy, i = 1; i < dy; i++, y += sy)
         {
             if (d > 0)
             {
@@ -101,6 +103,8 @@ void FRAME::set_line(short x1, short y1, short x2, short y2)
             else d += d1;
 
             set_pixel(x, y);
+            set_pixel(x+1, y);
+            set_pixel(x-1, y);
         }
     }
 
@@ -174,30 +178,39 @@ VECT3 FRAME::vect4_to_vect3(VECT4 vect4)
 }
 void FRAME::set_figure(FIGURE_4D& figure)
 {
-    // Convert 4D -> 2D -> 2D
-    for (short i = 0; i < figure.num_vert; i++)
+    // Convert 4D -> 3D -> 2D
+    for (int i = 0; i < figure.num_vert; i++)
     {
         figure.vertexes3[i] = vect4_to_vect3(figure.vertexes4[i]);
         figure.vertexes2[i] = vect3_to_vect2(figure.vertexes3[i]);
     }
 
-    // Draw edges
-    for (short i = 0; i < figure.num_edg; i++)
+    // Draw edges (lines)
+    for (int i = 0; i < figure.num_edg; i++)
     {
         if (i < 12) pen_color = { 255,0,0 };
         else if (i < 24) pen_color = { 0,255,0 };
         else pen_color = { 0,0,255 };
 
-        set_line(figure.vertexes2[figure.edges[i].begin].x, figure.vertexes2[figure.edges[i].begin].y, figure.vertexes2[figure.edges[i].end].x, figure.vertexes2[figure.edges[i].end].y);
+        set_line(
+            static_cast <int> (figure.vertexes2[figure.edges[i].begin].x),
+            static_cast <int> (figure.vertexes2[figure.edges[i].begin].y),
+            static_cast <int> (figure.vertexes2[figure.edges[i].end].x),
+            static_cast <int> (figure.vertexes2[figure.edges[i].end].y)
+        );
     }
 
-    // Draw vertexes
-    for (short i = 0; i < figure.num_vert; i++)
+    // Draw vertexes (circles)
+    for (int i = 0; i < figure.num_vert; i++)
     {
         if (i < 8) pen_color = { 255,0,0 };
         else pen_color = { 0,255,0 };
 
-        set_circle(figure.vertexes2[i].x, figure.vertexes2[i].y, 5);
+        set_circle(
+            static_cast <int> (figure.vertexes2[i].x),
+            static_cast <int> (figure.vertexes2[i].y),
+            7
+        );
     }
 }
 
@@ -218,13 +231,13 @@ FIGURE_4D::FIGURE_4D(const char* fname)
         vertexes3 = new VECT3[num_vert];
         vertexes2 = new VECT2[num_vert];
 
-        for (short i = 0; i < num_vert; i++)
+        for (int i = 0; i < num_vert; i++)
         {
             fscanf_s(fp, "%f %f %f %f", &vertexes4[i].x, &vertexes4[i].y, &vertexes4[i].z, &vertexes4[i].t);
-            vertexes4[i].x = 100 + 200 * vertexes4[i].x;
-            vertexes4[i].y = 100 + 200 * vertexes4[i].y;
-            vertexes4[i].z = 200 * vertexes4[i].z;
-            vertexes4[i].t = 200 * vertexes4[i].t;
+            vertexes4[i].x = 100.0f + 200.0f * vertexes4[i].x;
+            vertexes4[i].y = 100.0f + 200.0f * vertexes4[i].y;
+            vertexes4[i].z = 200.0f * vertexes4[i].z;
+            vertexes4[i].t = 200.0f * vertexes4[i].t;
         }
 
         // Read edges
@@ -232,7 +245,7 @@ FIGURE_4D::FIGURE_4D(const char* fname)
 
         edges = new EDGE[num_edg];
 
-        for (short i = 0; i < num_edg; i++)
+        for (int i = 0; i < num_edg; i++)
         {
             fscanf_s(fp, "%d %d", &edges[i].begin, &edges[i].end);
         }
@@ -258,48 +271,43 @@ FIGURE_4D::~FIGURE_4D()
 
 void FIGURE_4D::rotate_3d(float angle_YZ, float angle_XZ, float angle_XY, float x0, float y0, float z0)
 {
-    for (short i = 0; i < num_vert; i++)
+    for (int i = 0; i < num_vert; i++)
     {
         vect4_rotate_3d(vertexes4[i], angle_YZ, angle_XZ, angle_XY, x0, y0, z0);
     }
 }
 void FIGURE_4D::rotate_4d(float angle_XT, float angle_YT, float angle_ZT, float x0, float y0, float z0, float t0)
 {
-    for (short i = 0; i < num_vert; i++)
+    for (int i = 0; i < num_vert; i++)
     {
         vect4_rotate_4d(vertexes4[i], angle_XT, angle_YT, angle_ZT, x0, y0, z0, t0);
     }
 }
 void FIGURE_4D::translate(float dx, float dy, float dz, float dt)
 {
-    for (short i = 0; i < num_vert; i++)
+    for (int i = 0; i < num_vert; i++)
     {
-        vect4_translate(vertexes4[i], dx, dy, dz, dt);
+        vertexes4[i].x += dx;
+        vertexes4[i].y += dy;
+        vertexes4[i].z += dz;
+        vertexes4[i].t += dt;
+        
     }
 }
 
 // -+-+-+-+-+-+-+-+-+-+- GLOBAL FUNC -+-+-+-+-+-+-+-+-+-+-
 void vect4_rotate_3d(VECT4& vect4, float angle_YZ, float angle_XZ, float angle_XY, float x0, float y0, float z0)
 {
-    /*
-    float Mx[3][3] =
-    {
-        { 1,               0,                0 },
-        { 0, cos(RAD(angle)), -sin(RAD(angle)) },
-        { 0, sin(RAD(angle)),  cos(RAD(angle)) }
+    /* Rotation matrix in OYZ plane in 4D example:
+
+           X   Y     Z    T
+    {      |   |     |    |
+        {  1,  0,    0,   0  },  -  X
+        {  0,  cos, -sin, 0  },  -  Y
+        {  0,  sin,  cos, 0  },  -  Z
+        {  0,  0,    0,   1  }   -  T
     }
-    float My[3][3] =
-    {
-        {  cos(RAD(angle)), 0, sin(RAD(angle)) },
-        {                0, 1,               0 },
-        { -sin(RAD(angle)), 0, cos(RAD(angle)) }
-    }
-    float Mz[3][3] =
-    {
-        { cos(RAD(angle)), -sin(RAD(angle)), 0 },
-        { sin(RAD(angle)), cos(RAD(angle)),  0 },
-        { 0,               0,                1 }
-    }
+    
     */
 
     vect4.x -= x0;

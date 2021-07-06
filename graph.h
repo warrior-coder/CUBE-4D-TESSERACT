@@ -67,20 +67,20 @@ private:
     HDC hdc = nullptr;
     HDC tmpDc = nullptr;
     HBITMAP hbm = nullptr;
-    short width;
-    short height;
+    int width;
+    int height;
 
 public:
     RGB pen_color;
     float camera_z, camera_t;
 
-    FRAME(short frameWidth, short frameHeight, HWND frameHwnd);
+    FRAME(int frameWidth, int frameHeight, HWND frameHwnd);
     ~FRAME();
 
-    void clear(RGB color = { 255, 255, 255 });
-    void set_circle(short x0, short y0, short R);
-    void set_pixel(short x, short y);
-    void set_line(short x1, short y1, short x2, short y2);
+    void clear(RGB color = {});
+    void set_circle(int x0, int y0, int R);
+    void set_pixel(int x, int y);
+    void set_line(int x1, int y1, int x2, int y2);
     void print();
     VECT2 vect3_to_vect2(VECT3 vect3);
     VECT3 vect4_to_vect3(VECT4 vect4);

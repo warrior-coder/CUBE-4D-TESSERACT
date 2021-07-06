@@ -1,16 +1,12 @@
 ﻿#include "graph.h"
 
-unsigned int keyCode = 0;
-
 // Window processing function
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM lParam)
 {
     if (uMessage == WM_KEYDOWN)
     {
         if (wParam == 27) PostQuitMessage(0);
-        else keyCode = wParam;
     }
-    else if (uMessage == WM_KEYUP) keyCode = 0;
     else if (uMessage == WM_DESTROY) PostQuitMessage(0);
 
     return DefWindowProc(hwnd, uMessage, wParam, lParam);
@@ -52,11 +48,11 @@ int main()
             if (msg.message == WM_QUIT) break;
         }
 
-        frame.clear({ 0, 0, 0 });
-       
+        frame.clear();
+
         /* Most popular type of rotation: */
-        figure.rotate_3d(0, 0.15f, 0, 200, 200, 100);
-        figure.rotate_4d(0, 0.15f, 0, 200, 200, 100, 100);
+        figure.rotate_3d(0, 0.2, 0, 200, 200, 100);
+        figure.rotate_4d(0, 0.2, 0, 200, 200, 100, 100);
 
         frame.set_figure(figure);
         frame.print();
